@@ -28,3 +28,4 @@ primary_region = 'ord'
 [[statics]]
   guest_path = "/app/static"
   url_prefix = "/static/"
+

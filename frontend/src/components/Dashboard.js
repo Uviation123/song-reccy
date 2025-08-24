@@ -26,7 +26,7 @@ const Dashboard = () => {
 
   const checkAuth = async () => {
     try {
-      const response = await axios.get('/user-profile', { withCredentials: true });
+      const response = await axios.get('/api/user-profile', { withCredentials: true });
       setUser(response.data);
     } catch (error) {
       console.error('Authentication failed:', error);
@@ -38,7 +38,7 @@ const Dashboard = () => {
     setAnalyzing(true);
     setError(null);
     try {
-      const response = await axios.get('/analyze-listening-habits', { withCredentials: true });
+      const response = await axios.get('/api/analyze-listening-habits', { withCredentials: true });
       setAnalysis(response.data);
     } catch (error) {
       setError('Failed to analyze listening habits. Please try again.');
@@ -52,7 +52,7 @@ const Dashboard = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get('/recommendations', { withCredentials: true });
+      const response = await axios.get('/api/recommendations', { withCredentials: true });
       setRecommendations(response.data.recommendations);
     } catch (error) {
       if (error.response?.status === 400) {

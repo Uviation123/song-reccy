@@ -8,7 +8,7 @@ const Home = () => {
   const handleLogin = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/login');
+      const response = await axios.get('/api/login');
       window.location.href = response.data.auth_url;
     } catch (error) {
       console.error('Login failed:', error);

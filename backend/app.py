@@ -27,7 +27,7 @@ CORS(app, supports_credentials=True)
 # Spotify API credentials
 SPOTIFY_CLIENT_ID = os.environ.get('SPOTIFY_CLIENT_ID', '')
 SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET', '')
-SPOTIFY_REDIRECT_URI = os.environ.get('SPOTIFY_REDIRECT_URI', 'http://127.0.0.1:5000/callback')
+SPOTIFY_REDIRECT_URI = os.environ.get('SPOTIFY_REDIRECT_URI', 'http://127.0.0.1:5000/api/callback')
 
 # Spotify OAuth setup
 sp_oauth = SpotifyOAuth(
@@ -293,25 +293,25 @@ class SongRecommender:
 # Initialize recommender
 recommender = SongRecommender()
 
-@app.route('/')
-def index():
+@app.route('/api')
+def api_info():
     return jsonify({"message": "Spotify Song Recommender API"})
 
-@app.route('/login')
+@app.route('/api/login')
 def login():
     auth_url = sp_oauth.get_authorize_url()
     return jsonify({"auth_url": auth_url})
 
-@app.route('/callback')
+@app.route('/api/callback')
 def callback():
     code = request.args.get('code')
     if code:
         token_info = sp_oauth.get_access_token(code)
         session['token_info'] = token_info
-        return redirect('http://127.0.0.1:3000/dashboard')
+        return redirect('/dashboard')  # Redirect to frontend route
     return jsonify({"error": "Authorization failed"}), 400
 
-@app.route('/user-profile')
+@app.route('/api/user-profile')
 def get_user_profile():
     token_info = session.get('token_info', None)
     if not token_info:
@@ -330,7 +330,7 @@ def get_user_profile():
         logger.error(f"Error getting user profile: {e}")
         return jsonify({"error": "Failed to get user profile"}), 500
 
-@app.route('/analyze-listening-habits')
+@app.route('/api/analyze-listening-habits')
 def analyze_listening_habits():
     token_info = session.get('token_info', None)
     if not token_info:
@@ -477,7 +477,7 @@ def analyze_listening_habits():
             "error": f"Failed to analyze listening habits: {str(e)}"
         }), 500
 
-@app.route('/recommendations')
+@app.route('/api/recommendations')
 def get_recommendations():
     token_info = session.get('token_info', None)
     user_profile = session.get('user_profile', None)
@@ -522,7 +522,7 @@ def get_recommendations():
         logger.error(f"Error getting recommendations: {e}")
         return jsonify({"error": "Failed to get recommendations"}), 500
 
-@app.route('/logout')
+@app.route('/api/logout')
 def logout():
     session.clear()
     return jsonify({"message": "Logged out successfully"})
