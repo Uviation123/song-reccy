@@ -27,7 +27,9 @@ CORS(app, supports_credentials=True)
 # Spotify API credentials
 SPOTIFY_CLIENT_ID = os.environ.get('SPOTIFY_CLIENT_ID', '')
 SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET', '')
-SPOTIFY_REDIRECT_URI = os.environ.get('SPOTIFY_REDIRECT_URI', 'http://127.0.0.1:5000/api/callback')
+# Default to localhost for development, but use environment variable for production
+DEFAULT_REDIRECT_URI = 'http://127.0.0.1:5000/api/callback'
+SPOTIFY_REDIRECT_URI = os.environ.get('SPOTIFY_REDIRECT_URI', DEFAULT_REDIRECT_URI)
 
 # Spotify OAuth setup
 sp_oauth = SpotifyOAuth(
@@ -302,14 +304,39 @@ def login():
     auth_url = sp_oauth.get_authorize_url()
     return jsonify({"auth_url": auth_url})
 
-@app.route('/api/callback')
-def callback():
+def handle_spotify_callback():
+    """Common callback logic for both /api/callback and /callback routes"""
     code = request.args.get('code')
     if code:
         token_info = sp_oauth.get_access_token(code)
         session['token_info'] = token_info
-        return redirect('/dashboard')  # Redirect to frontend route
+        
+        # Determine the correct frontend URL for redirect
+        # In production, use the app domain; in development, use localhost:3000
+        frontend_url = os.environ.get('FRONTEND_URL')
+        if not frontend_url:
+            # Auto-detect based on request host
+            host = request.headers.get('Host', 'localhost:5000')
+            if 'localhost' in host or '127.0.0.1' in host:
+                frontend_url = 'http://localhost:3000'  # Development React app
+            else:
+                frontend_url = f"https://{host}"  # Production (served by Flask)
+        
+        dashboard_url = f"{frontend_url}/dashboard"
+        logger.info(f"Redirecting to: {dashboard_url}")
+        return redirect(dashboard_url)
     return jsonify({"error": "Authorization failed"}), 400
+
+@app.route('/api/callback')
+def callback():
+    """Primary callback route for Spotify OAuth"""
+    return handle_spotify_callback()
+
+@app.route('/callback')
+def callback_fallback():
+    """Fallback callback route for older Spotify app configurations"""
+    logger.info("Using fallback callback route - consider updating your Spotify app redirect URI to /api/callback")
+    return handle_spotify_callback()
 
 @app.route('/api/user-profile')
 def get_user_profile():

@@ -11,6 +11,9 @@ primary_region = 'ord'
 [env]
   FLASK_ENV = "production"
   PORT = "8080"
+  # The SPOTIFY_REDIRECT_URI should be set to your production domain in secrets
+  # Example: SPOTIFY_REDIRECT_URI = "https://song-reccy.fly.dev/api/callback"
+  # Set this using: fly secrets set SPOTIFY_REDIRECT_URI=https://your-app-name.fly.dev/api/callback
 
 [http_service]
   internal_port = 8080
